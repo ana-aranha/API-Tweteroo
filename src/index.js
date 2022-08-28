@@ -1,6 +1,4 @@
 import express from "express";
-/* import { tweetsGet } from "./tweets-get.js"; */
-/* import { users } from "./users.js"; */
 import cors from "cors";
 
 const app = express();
@@ -40,7 +38,8 @@ app.post("/sign-up", (req, res) => {
 });
 
 app.post("/tweets", (req, res) => {
-	const { username, tweet } = req.body;
+	const { tweet } = req.body;
+	const username = req.headers.user;
 
 	if (!username || !tweet) {
 		return res.status(400).send("Todos os campos são obrigatórios!");
@@ -58,11 +57,47 @@ app.post("/tweets", (req, res) => {
 	res.status(400).send("Usuário inválido");
 });
 
+app.get("/tweets/:user", (req, res) => {
+	const { user } = req.params;
+	const LastTweets = [];
+
+	for (let i in users) {
+		if (users[i].username.toLowerCase() === user.toLowerCase()) {
+			const userTweets = tweets.filter((tweet) => tweet.username === user);
+			const userAvatar = users[i].avatar;
+
+			if (userTweets.length < 10) {
+				for (let i = userTweets.length - 1; i >= 0; i--) {
+					const el = { ...userTweets[i] };
+					el.avatar = userAvatar;
+					LastTweets.push(el);
+				}
+
+				console.log(LastTweets);
+				return res.send(LastTweets);
+			}
+
+			for (let i = tweets.length - 1; i >= tweets.length - 10; i--) {
+				const el = { ...tweets[i] };
+				for (let j in users) {
+					if (users[j].username === tweets[i].username) {
+						el.avatar = users[j].avatar;
+						LastTweets.push(el);
+					}
+				}
+			}
+			return res.send(LastTweets);
+		}
+	}
+
+	return res.sendStatus(400);
+});
+
 app.get("/tweets", (req, res) => {
 	const LastTweets = [];
 
 	if (tweets.length < 10) {
-		for (let i in tweets) {
+		for (let i = tweets.length - 1; i >= 0; i--) {
 			const el = { ...tweets[i] };
 			for (let j in users) {
 				if (users[j].username === tweets[i].username) {
@@ -85,6 +120,22 @@ app.get("/tweets", (req, res) => {
 			}
 		}
 	}
+
+	/* 	if (tweets.length > (req.query.page-1)*10){
+		for (
+			let i = tweets.length - (req.query.page - 1) * 10 - 1;
+			i >= tweets.length - (req.query.page - 1) * 10 - 10;
+			i--
+		) {
+			const el = { ...tweets[i] };
+			for (let j in users) {
+				if (users[j].username === tweets[i].username) {
+					el.avatar = users[j].avatar;
+					LastTweets.push(el);
+				}
+			}
+		}
+	} */
 
 	res.send(LastTweets);
 });
