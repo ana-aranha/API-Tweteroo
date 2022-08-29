@@ -5,24 +5,15 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-const users = [
-	{
-		username: "bobesponja",
-		avatar:
-			"https://super.abril.com.br/wp-content/uploads/2020/09/04-09_gato_SITE.jpg?quality=70&strip=info",
-	},
-];
+const users = [];
 
-const tweets = [
-	{
-		username: "bobesponja",
-		tweet: "eu amo o hub",
-	},
-	{
-		username: "bobesponja",
-		tweet: "eu amo o hub",
-	},
-];
+const tweets = [];
+
+function isImage(url) {
+	return (
+		/\.(jpg|jpeg|png|webp|avif|gif|svg)$/.test(url) && url.startsWith("http")
+	);
+}
 
 app.post("/sign-up", (req, res) => {
 	const { username, avatar } = req.body;
@@ -31,10 +22,12 @@ app.post("/sign-up", (req, res) => {
 		return res.status(400).send("Todos os campos são obrigatórios!");
 	}
 
-	users.push({ username, avatar });
-
-	console.log(users);
-	res.status(201).send("OK");
+	if (isImage(avatar)) {
+		users.push({ username, avatar });
+		return res.status(201).send("OK");
+	} else {
+		return res.status(400).send("Link de imagem inválido.");
+	}
 });
 
 app.post("/tweets", (req, res) => {
@@ -49,7 +42,6 @@ app.post("/tweets", (req, res) => {
 		if (users[i].username === username) {
 			tweets.push({ username, tweet });
 
-			console.log(tweets);
 			return res.status(201).send("OK");
 		}
 	}
@@ -73,7 +65,6 @@ app.get("/tweets/:user", (req, res) => {
 					LastTweets.push(el);
 				}
 
-				console.log(LastTweets);
 				return res.send(LastTweets);
 			}
 
@@ -107,7 +98,6 @@ app.get("/tweets", (req, res) => {
 			}
 		}
 
-		console.log(LastTweets);
 		return res.send(LastTweets);
 	}
 
@@ -120,22 +110,6 @@ app.get("/tweets", (req, res) => {
 			}
 		}
 	}
-
-	/* 	if (tweets.length > (req.query.page-1)*10){
-		for (
-			let i = tweets.length - (req.query.page - 1) * 10 - 1;
-			i >= tweets.length - (req.query.page - 1) * 10 - 10;
-			i--
-		) {
-			const el = { ...tweets[i] };
-			for (let j in users) {
-				if (users[j].username === tweets[i].username) {
-					el.avatar = users[j].avatar;
-					LastTweets.push(el);
-				}
-			}
-		}
-	} */
 
 	res.send(LastTweets);
 });
